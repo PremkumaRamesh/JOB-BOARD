@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JobBoard UI — Prototype</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* small custom styles */
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --accent-color: #f7b731;
+           
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+        }
+
+        body { 
+            background: #f0f2f5; 
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+        
+        }
+        
+        .navbar { background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%); }
+        .navbar-brand, .nav-link { color: var(--text-dark) !important; font-weight: 700; }
+        .navbar-brand:hover, .nav-link:hover { color: white !important; }
+        
+        .hero { 
+            background: linear-gradient(135deg, #ff6b6b, #f0e130);
+            color: white; 
+            padding: 5rem 0; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 1s ease-in-out;
+        }
+        .hero h1 { font-weight: 900; }
+        .hero p { font-weight: 400; }
+        
+        .job-card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .job-card:hover { 
+            transform: translateY(-5px) scale(1.02); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+        }
+        
+        .small-muted { font-size: .9rem; color: var(--text-muted); }
+        .tag { 
+            font-size: .85rem; 
+            border-radius: 5px; 
+            padding: .3rem .7rem; 
+            background: #e9f5ff; 
+            color: #007bff; 
+            border: 1px solid #cce5ff;
+            transition: background 0.2s, color 0.2s;
+        }
+        .tag:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .sidebar { 
+            min-height: 60vh; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .toast-container { 
+            position: fixed; 
+            right: 1rem; 
+            bottom: 1rem; 
+            z-index: 1080;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .btn-green { background-color: #2ecc71; border-color: #2ecc71; color: white; transition: all 0.3s; }
+        .btn-green:hover { background-color: #27ae60; border-color: #27ae60; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-purple { background-color: #8e44ad; border-color: #8e44ad; color: white; transition: all 0.3s; }
+        .btn-purple:hover { background-color: #7d3c9a; border-color: #7d3c9a; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); transition: all 0.3s; }
+        .btn-primary:hover { background-color: #f67280; border-color: #f67280; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-outline-primary { border-color: var(--primary-color); color: var(--primary-color); transition: all 0.3s; }
+        .btn-outline-primary:hover { background-color: var(--primary-color); color: white; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-success { background-color: var(--secondary-color); border-color: var(--secondary-color); color: var(--text-dark); transition: all 0.3s; }
+        .btn-success:hover { background-color: #3ec9be; border-color: #3ec9be; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        .job-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* responsive tweaks */
+        @media (max-width: 575px) { 
+            .hero { padding: 3rem 0; } 
+            .navbar .container { flex-wrap: wrap; }
+            #navSearch { width: 100%; margin-top: 10px; }
+            .job-card .d-flex { flex-direction: column; align-items: flex-start !important; }
+            .job-logo { margin-bottom: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#" onclick="showSection('home')"><i class="fa-solid fa-briefcase me-2"></i>JobBoard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-controls="navmenu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navmenu">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('home')"><i class="fa-solid fa-house me-1"></i> Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('jobs')"><i class="fa-solid fa-magnifying-glass me-1"></i> Jobs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('employer')"><i class="fa-solid fa-building me-1"></i> Employer</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('candidate')"><i class="fa-solid fa-user me-1"></i> Candidate</a></li>
+                </ul>
+
+                <form class="d-flex me-3" id="navSearch" onsubmit="event.preventDefault(); doNavSearch();">
+                    <input id="navSearchInput" class="form-control form-control-sm me-2" type="search" placeholder="Search jobs..." aria-label="Search jobs">
+                    <button class="btn btn-outline-primary btn-sm" type="submit" aria-label="Search"><i class="fa-solid fa-search"></i></button>
+                </form>
+
+                <div id="authButtons">
+                    <button class="btn btn-outline-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+                </div>
+
+                <div id="userMenu" class="d-none">
+                    <div class="dropdown">
+                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" id="userDropdown">Hi, User</button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="showSection('candidate')"><i class="fa-solid fa-address-card me-1"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showSection('employer')"><i class="fa-solid fa-plus-circle me-1"></i> Post a Job</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fa-solid fa-sign-out-alt me-1"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <section id="home" class="hero rounded-3 mb-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-7 text-white">
+                        <h1 class="display-6">Find your next great job — or hire the perfect candidate</h1>
+                        <p class="lead">Search by title, company, location. Employers can post jobs and manage applicants. Candidate can apply quickly with resume upload.</p>
+                        <div class="mt-4">
+                            <a href="#" class="btn btn-light btn-lg me-2" onclick="showSection('jobs')"><i class="fa-solid fa-search me-2"></i>Browse Jobs</a>
+                            <a href="#" class="btn btn-outline-light btn-lg" onclick="showSection('employer')"><i class="fa-solid fa-building me-2"></i>For Employers</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 d-none d-md-block">
+                        <div class="card bg-white bg-opacity-75 text-dark border-0">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fa-solid fa-star text-warning me-1"></i>Featured Jobs</h6>
+                                <div id="featuredList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="jobs" class="d-none">
+            <div class="row mb-4">
+                <div class="col-lg-9">
+                    <form id="searchForm" class="row g-2 align-items-center" onsubmit="event.preventDefault(); applyFilters();">
+                        <div class="col-sm-6 col-md-5">
+                            <input id="searchInput" class="form-control" placeholder="Job title, keywords..." />
+                        </div>
+                        <div class="col-sm-4 col-md-3">
+                            <input id="locationInput" class="form-control" placeholder="Location (city)" />
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            <label for="typeFilter" class="form-label visually-hidden">Job Type Filter</label>
+                            <select id="typeFilter" class="form-select" aria-label="Filter jobs by type">
+                                <option value="">Any Type</option>
+                                <option>Full-time</option>
+                                <option>Part-time</option>
+                                <option>Contract</option>
+                                <option>Internship</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-12 col-md-2 d-grid">
+                            <button class="btn btn-primary"><i class="fa-solid fa-search me-1"></i>Search</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-lg-3 text-end d-none d-lg-block">
+                    <small class="small-muted">Showing <span id="jobsCount">0</span> jobs</small>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div id="jobsContainer" class="row g-4"></div>
+                    <nav class="mt-4" aria-label="Jobs pagination">
+                        <ul id="pagination" class="pagination"></ul>
+                    </nav>
+                </div>
+
+                <aside class="col-lg-4">
+                    <div class="card sidebar p-4">
+                        <h6><i class="fa-solid fa-filter me-1"></i>Filters</h6>
+                        <div class="mb-3">
+                            <label for="salaryFilter" class="form-label">Salary range</label>
+                            <select id="salaryFilter" class="form-select" aria-label="Filter jobs by salary range">
+                                <option value="">Any</option>
+                                <option value="0-20000">Up to ₹20k</option>
+                                <option value="20000-50000">₹20k - ₹50k</option>
+                                <option value="50000-999999">₹50k+</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Skills</label>
+                            <div class="d-flex flex-wrap">
+                                <button class="btn btn-outline-secondary btn-sm me-2 mb-2 skill-btn" data-skill="JavaScript"><i class="fa-solid fa-code"></i> JS</button>
+                                <button class="btn btn-outline-secondary btn-sm me-2 mb-2 skill-btn" data-skill="Python"><i class="fa-solid fa-laptop-code"></i> Python</button>
+                                <button class="btn btn-outline-secondary btn-sm me-2 mb-2 skill-btn" data-skill="React"><i class="fa-brands fa-react fa-spin"></i> React</button>
+                                <button class="btn btn-outline-secondary btn-sm me-2 mb-2 skill-btn" data-skill="SQL"><i class="fa-solid fa-database"></i> SQL</button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section id="employer" class="d-none">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="card p-4">
+                        <h6><i class="fa-solid fa-building me-1"></i>Employer</h6>
+                        <div class="list-group mt-3">
+                            <a href="#" class="list-group-item list-group-item-action active"><i class="fa-solid fa-file-circle-plus me-1"></i> Post a job</a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="renderEmployerPosts()"><i class="fa-solid fa-list-check me-1"></i> My Jobs</a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('home')"><i class="fa-solid fa-house-user me-1"></i> Back to Home</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-9">
+                    <div class="card p-4">
+                        <h5><i class="fa-solid fa-upload me-1"></i> Post a Job</h5>
+                        <form id="createJobForm" class="mt-3" onsubmit="event.preventDefault(); createJob();">
+                            <div class="row g-3">
+                                <div class="col-md-6"><input id="jobTitle" class="form-control" placeholder="Job title" required></div>
+                                <div class="col-md-6"><input id="companyName" class="form-control" placeholder="Company name" required></div>
+                                <div class="col-md-4"><input id="jobLocation" class="form-control" placeholder="Location" required></div>
+                                <div class="col-md-4">
+                                    <label for="jobType" class="form-label">Job Type</label>
+                                    <select id="jobType" class="form-select" required aria-label="Select job type">
+                                        <option value="">-- Select Job Type --</option>
+                                        <option>Full-time</option>
+                                        <option>Part-time</option>
+                                        <option>Contract</option>
+                                        <option>Internship</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4"><input id="jobSalary" class="form-control" placeholder="Salary (₹)"></div>
+                                <div class="col-12"><textarea id="jobDesc" class="form-control" rows="5" placeholder="Full job description"></textarea></div>
+                                <div class="col-12 text-end"><button class="btn btn-success"><i class="fa-solid fa-check me-1"></i>Post Job</button></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="employerPosts" class="mt-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="candidate" class="d-none">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="card p-4">
+                        <h6><i class="fa-solid fa-user me-1"></i>Candidate</h6>
+                        <div class="list-group mt-3">
+                            <a href="#" class="list-group-item list-group-item-action active"><i class="fa-solid fa-address-card me-1"></i> Profile</a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="renderApplications()"><i class="fa-solid fa-file-import me-1"></i> My Applications</a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('jobs')"><i class="fa-solid fa-search me-1"></i> Browse Jobs</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-9">
+                    <div class="card p-4">
+                        <h5><i class="fa-solid fa-user-circle me-1"></i> Profile</h5>
+                        <form id="profileForm" class="mt-3" onsubmit="event.preventDefault(); saveProfile();">
+                            <div class="row g-3">
+                                <div class="col-md-6"><input id="profileName" class="form-control" placeholder="Full name" required></div>
+                                <div class="col-md-6"><input id="profileEmail" class="form-control" placeholder="Email" required></div>
+                                <div class="col-md-6"><input id="profilePhone" class="form-control" placeholder="Phone"></div>
+                                <div class="col-md-6"><input id="profileLocation" class="form-control" placeholder="Location"></div>
+                                <div class="col-12"><textarea id="profileBio" class="form-control" rows="3" placeholder="Short bio / resume summary"></textarea></div>
+                                <div class="col-12">
+                                    <label for="profileResume" class="form-label"><i class="fa-solid fa-file-arrow-up me-1"></i> Upload resume (PDF / DOC)</label>
+                                    <input id="profileResume" type="file" class="form-control" accept=".pdf,.doc,.docx" aria-label="Upload resume file (PDF or DOC format)" />
+                                </div>
+                                <div class="col-12 text-end"><button class="btn btn-primary"><i class="fa-solid fa-floppy-disk me-1"></i> Save Profile</button></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="applicationsList" class="mt-4"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="modal fade" id="jobDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="modalJobTitle" class="modal-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small-muted" id="modalCompany"></p>
+                    <p id="modalJobDesc"></p>
+                    <div class="mb-3"><strong><i class="fa-solid fa-tools me-1"></i>Skills:</strong> <span id="modalSkills"></span></div>
+                    <div class="mb-3"><strong><i class="fa-solid fa-indian-rupee-sign me-1"></i>Salary:</strong> <span id="modalSalary"></span></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-times me-1"></i>Close</button>
+                    <button class="btn btn-success" onclick="openApplyModal()"><i class="fa-solid fa-paper-plane me-1"></i>Apply Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="applyForm" class="modal-content" onsubmit="event.preventDefault(); submitApplication();">
+                <div class="modal-header">
+                    <h5 class="modal-title">Apply for <span id="applyJobTitle"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input id="applyJobId" type="hidden" />
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fa-solid fa-user me-1"></i> Full name</label>
+                        <input id="applicantName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fa-solid fa-envelope me-1"></i> Email</label>
+                        <input id="applicantEmail" type="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fa-solid fa-phone me-1"></i> Phone</label>
+                        <input id="applicantPhone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fa-solid fa-file-lines me-1"></i> Cover letter</label>
+                        <textarea id="applicantCover" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fa-solid fa-file-arrow-up me-1"></i> Resume (PDF, DOC, max 3MB)</label>
+                        <input id="applicantResume" type="file" class="form-control" accept=".pdf,.doc,.docx" required>
+                        <div id="resumePreview" class="small-muted mt-1"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-times me-1"></i>Close</button>
+                    <button class="btn btn-green"><i class="fa-solid fa-paper-plane me-1"></i>Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="loginForm" class="modal-content" onsubmit="event.preventDefault(); doLogin();">
+                <div class="modal-header"><h5 class="modal-title"><i class="fa-solid fa-sign-in-alt me-1"></i>Login</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><input id="loginEmail" class="form-control" placeholder="Email" required></div>
+                    <div class="mb-3"><input id="loginPassword" type="password" class="form-control" placeholder="Password" required></div>
+                    <div><small class="small-muted">Note: This demo simulates auth in browser storage.</small></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-times me-1"></i>Close</button>
+                    <button class="btn btn-purple"><i class="fa-solid fa-right-to-bracket me-1"></i>Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="registerForm" class="modal-content" onsubmit="event.preventDefault(); doRegister();">
+                <div class="modal-header"><h5 class="modal-title"><i class="fa-solid fa-user-plus me-1"></i>Register</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3"><input id="regName" class="form-control" placeholder="Full name" required></div>
+                    <div class="mb-3"><input id="regEmail" class="form-control" placeholder="Email" required></div>
+                    <div class="mb-3"><input id="regPassword" type="password" class="form-control" placeholder="Password" required></div>
+                    <div class="form-check"><input id="isEmployer" type="checkbox" class="form-check-input"><label class="form-check-label">Register as employer?</label></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-times me-1"></i>Close</button>
+                    <button class="btn btn-success"><i class="fa-solid fa-user-check me-1"></i>Create account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ========== SAMPLE DATA ========== */
+        let jobs = [
+            {id:1, title:"Frontend Developer", company:"FintechGie", location:"Chennai", type:"Full-time", salary:"₹30,000 - ₹50,000", featured:true, skills:["JavaScript","HTML","CSS","React"], desc:"Build responsive UI for fintech apps.", img:"https://picsum.photos/seed/fintech/60"},
+            {id:2, title:"Junior Java Developer", company:"TechWorks", location:"Bengaluru", type:"Full-time", salary:"₹25,000 - ₹40,000", featured:true, skills:["Java","Spring","SQL"], desc:"Work on backend APIs and services.", img:"https://picsum.photos/seed/techworks/60"},
+            {id:3, title:"Data Analyst Intern", company:"Insights Co", location:"Hyderabad", type:"Internship", salary:"₹8,000 - ₹12,000", featured:false, skills:["Python","SQL","Excel"], desc:"Assist in building dashboards.", img:"https://picsum.photos/seed/data/60"},
+            {id:4, title:"React Native Developer", company:"MobilityX", location:"Pune", type:"Contract", salary:"₹40,000+", featured:false, skills:["React Native","APIs"], desc:"Mobile apps for logistics.", img:"https://picsum.photos/seed/mobile/60"},
+            {id:5, title:"Product Designer", company:"DesignHub", location:"Chennai", type:"Full-time", salary:"₹35,000 - ₹60,000", featured:false, skills:["Figma","UX"], desc:"Design intuitive user experiences.", img:"https://picsum.photos/seed/design/60"},
+            {id:6, title:"DevOps Engineer", company:"CloudScale", location:"Mumbai", type:"Full-time", salary:"₹45,000 - ₹80,000", featured:false, skills:["AWS","Docker","CI/CD"], desc:"Manage cloud infra.", img:"https://picsum.photos/seed/cloud/60"}
+        ];
+
+        let applications = JSON.parse(localStorage.getItem('applications')||'[]');
+        let users = JSON.parse(localStorage.getItem('users')||'[]'); // demo-only
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')||'null');
+
+        /* ========== UI Helpers ========== */
+        function toast(msg, type='success') {
+            const id = 't' + Date.now();
+            const el = document.createElement('div');
+            el.className = 'toast align-items-center text-bg-'+(type==='success'?'success':'danger')+' border-0';
+            el.id = id;
+            el.setAttribute('role','alert');
+            el.setAttribute('aria-live','assertive');
+            el.setAttribute('aria-atomic','true');
+            el.innerHTML = '<div class="d-flex"><div class="toast-body">'+msg+'</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
+            document.getElementById('toastContainer').appendChild(el);
+            const t = new bootstrap.Toast(el,{delay:3000});
+            t.show();
+            el.addEventListener('hidden.bs.toast', ()=>el.remove());
+        }
+
+        /* ========== Navigation & Sections ========== */
+        function showSection(name) {
+            document.querySelectorAll('main section').forEach(sec=>sec.classList.add('d-none'));
+            document.getElementById(name).classList.remove('d-none');
+            if (name==='jobs') {
+                renderJobs();
+            } else if (name==='home') {
+                renderFeatured();
+            } else if (name==='candidate') {
+                loadProfileForm();
+            } else if (name==='employer') {
+                renderEmployerPosts();
+            }
+        }
+
+        function doNavSearch() {
+            const q = document.getElementById('navSearchInput').value.trim();
+            document.getElementById('searchInput').value = q;
+            showSection('jobs');
+            applyFilters();
+        }
+
+        /* ========== Featured on Home ========== */
+        function renderFeatured() {
+            const f = jobs.filter(j=> j.featured).slice(0,4);
+            const container = document.getElementById('featuredList');
+            container.innerHTML = f.map(j => `
+                <div class="mb-2">
+                    <a href="#" onclick="openJobById(${j.id})" class="fw-bold text-dark text-decoration-none">${j.title}</a>
+                    <div class="small-muted">${j.company} • ${j.location}</div>
+                </div>`).join('');
+        }
+
+        /* ========== Jobs Listing ========== */
+        let currentPage = 1;
+        const PAGE_SIZE = 4;
+        let filteredJobs = [...jobs];
+
+        function renderJobs(page = 1) {
+            currentPage = page;
+            const start = (page-1)*PAGE_SIZE;
+            const pageJobs = filteredJobs.slice(start, start+PAGE_SIZE);
+            const container = document.getElementById('jobsContainer');
+            container.innerHTML = pageJobs.map(j => `
+                <div class="col-12">
+                    <div class="card job-card p-4">
+                        <div class="d-flex align-items-center">
+                            <img src="${j.img}" class="job-logo" alt="${j.company} logo">
+                            <div class="flex-grow-1">
+                                <a href="#" class="h5 text-decoration-none" onclick="openJobById(${j.id})">${j.title}</a>
+                                <div class="small-muted mt-1"><i class="fa-solid fa-building me-1"></i>${j.company} • <i class="fa-solid fa-map-marker-alt me-1"></i>${j.location} • <i class="fa-solid fa-clock me-1"></i>${j.type}</div>
+                                <p class="mt-3">${j.desc}</p>
+                                <div>${j.skills.slice(0,4).map(s=>`<span class="tag me-2">${s}</span>`).join('')}</div>
+                            </div>
+                            <div class="text-end ms-3">
+                                <div class="small-muted"><i class="fa-solid fa-rupee-sign me-1"></i>${j.salary || '—'}</div>
+                                <div class="mt-3">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="openJobById(${j.id})">Details</button>
+                                    <button class="btn btn-green btn-sm ms-1" onclick="openApplyModal(${j.id})"><i class="fa-solid fa-paper-plane"></i> Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`).join('');
+            document.getElementById('jobsCount').innerText = filteredJobs.length;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredJobs.length / PAGE_SIZE) || 1;
+            const ul = document.getElementById('pagination');
+            ul.innerHTML = '';
+            for (let p=1; p<=totalPages; p++) {
+                const li = document.createElement('li');
+                li.className = 'page-item ' + (p===currentPage ? 'active' : '');
+                li.innerHTML = `<a class="page-link" href="#" onclick="renderJobs(${p})">${p}</a>`;
+                ul.appendChild(li);
+            }
+        }
+
+        /* ========== Filters/Search ========== */
+        function applyFilters() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const loc = document.getElementById('locationInput').value.trim().toLowerCase();
+            const type = document.getElementById('typeFilter').value;
+            const salary = document.getElementById('salaryFilter') ? document.getElementById('salaryFilter').value : '';
+            const skillButtons = Array.from(document.querySelectorAll('.skill-btn.active')).map(b=>b.dataset.skill);
+
+            filteredJobs = jobs.filter(j=>{
+                if (q && !(j.title.toLowerCase().includes(q) || j.desc.toLowerCase().includes(q) || j.company.toLowerCase().includes(q))) return false;
+                if (loc && !j.location.toLowerCase().includes(loc)) return false;
+                if (type && j.type!==type) return false;
+                if (salary) {
+                    const [min,max] = salary.split('-').map(Number);
+                    const numeric = Number((j.salary || '').replace(/[^\d]/g,'')) || 0;
+                    if (numeric < min || numeric > max) return false;
+                }
+                if (skillButtons.length && !skillButtons.every(s => j.skills.includes(s))) return false;
+                return true;
+            });
+
+            renderJobs(1);
+        }
+
+        /* skill filter toggles */
+        document.addEventListener('click', function(e){
+            if (e.target.classList.contains('skill-btn')) {
+                e.target.classList.toggle('active');
+                applyFilters();
+            }
+        });
+
+        /* ========== Job detail & apply ========== */
+        let activeJobId = null;
+        function openJobById(id) {
+            const job = jobs.find(j=> j.id===id);
+            if (!job) return;
+            document.getElementById('modalJobTitle').innerText = job.title;
+            document.getElementById('modalCompany').innerHTML = `<i class="fa-solid fa-building me-1"></i>${job.company} • <i class="fa-solid fa-map-marker-alt me-1"></i>${job.location} • <i class="fa-solid fa-clock me-1"></i>${job.type}`;
+            document.getElementById('modalJobDesc').innerText = job.desc;
+            document.getElementById('modalSkills').innerHTML = job.skills.map(s=>`<span class="tag me-2">${s}</span>`).join('');
+            document.getElementById('modalSalary').innerText = job.salary || '—';
+            const md = new bootstrap.Modal(document.getElementById('jobDetailModal'));
+            md.show();
+            activeJobId = id;
+        }
+
+        function openApplyModal(id=activeJobId) {
+            const job = jobs.find(j=> j.id===id);
+            if (!job) return;
+            document.getElementById('applyJobId').value = id;
+            document.getElementById('applyJobTitle').innerText = job.title;
+            // Prefill name/email from profile if available
+            const profile = JSON.parse(localStorage.getItem('profile')||'null');
+            if (profile) {
+                document.getElementById('applicantName').value = profile.name || '';
+                document.getElementById('applicantEmail').value = profile.email || '';
+                document.getElementById('applicantPhone').value = profile.phone || '';
+            } else {
+                document.getElementById('applicantName').value = '';
+                document.getElementById('applicantEmail').value = '';
+                document.getElementById('applicantPhone').value = '';
+            }
+            document.getElementById('applicantCover').value = '';
+            document.getElementById('applicantResume').value = null;
+            document.getElementById('resumePreview').innerText = '';
+            const am = new bootstrap.Modal(document.getElementById('applyModal'));
+            am.show();
+        }
+
+        /* resume preview */
+        document.getElementById('applicantResume').addEventListener('change', function(){
+            const f = this.files[0];
+            const p = document.getElementById('resumePreview');
+            if (!f) { p.innerText = ''; return; }
+            const max = 3*1024*1024;
+            if (f.size > max) { p.innerText = 'File too large (>3MB).'; this.value = null; return; }
+            p.innerText = `Selected: ${f.name} (${Math.round(f.size/1024)} KB)`;
+        });
+
+        /* submit application (client-side demo) */
+        function submitApplication(){
+            const id = Number(document.getElementById('applyJobId').value);
+            const name = document.getElementById('applicantName').value.trim();
+            const email = document.getElementById('applicantEmail').value.trim();
+            const phone = document.getElementById('applicantPhone').value.trim();
+            const cover = document.getElementById('applicantCover').value.trim();
+            const resumeInput = document.getElementById('applicantResume');
+            if (!name || !email || resumeInput.files.length===0) { toast('Please fill name, email and attach resume','error'); return; }
+            const resumeFile = resumeInput.files[0];
+            // Save application locally (in real app: send FormData via fetch)
+            const app = {id: Date.now(), jobId: id, name, email, phone, cover, resumeName: resumeFile.name, date: new Date().toISOString()};
+            applications.push(app);
+            localStorage.setItem('applications', JSON.stringify(applications));
+            // simulate sending email notification (real backend should send)
+            toast('Application submitted — confirmation email sent (simulated).');
+            // close modal
+            const am = bootstrap.Modal.getInstance(document.getElementById('applyModal'));
+            if (am) am.hide();
+        }
+
+        /* ========== Employer: create job & list my posts ========== */
+        function createJob() {
+            const title = document.getElementById('jobTitle').value.trim();
+            const company = document.getElementById('companyName').value.trim();
+            const loc = document.getElementById('jobLocation').value.trim();
+            const type = document.getElementById('jobType').value;
+            const salary = document.getElementById('jobSalary').value.trim();
+            const desc = document.getElementById('jobDesc').value.trim();
+            const newJob = { id: Date.now(), title, company, location:loc, type, salary, desc, skills:[], featured:false };
+            jobs.unshift(newJob);
+            toast('Job posted (local demo).');
+            renderEmployerPosts();
+            renderJobs();
+            document.getElementById('createJobForm').reset();
+        }
+
+        function renderEmployerPosts(){
+            const el = document.getElementById('employerPosts');
+            el.innerHTML = '<h6 class="mt-3">Your Jobs</h6>';
+            const myJobs = jobs.slice(0,10); // demo: show latest
+            el.innerHTML += myJobs.map(j=>`
+                <div class="card mt-3 p-3 job-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold">${j.title}</div>
+                            <div class="small-muted">${j.company} • ${j.location}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm" onclick="openJobById(${j.id})"><i class="fa-solid fa-eye me-1"></i>View</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteJob(${j.id})"><i class="fa-solid fa-trash-can me-1"></i>Delete</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function deleteJob(id) {
+            if (!confirm('Delete this job?')) return;
+            jobs = jobs.filter(j=> j.id !== id);
+            renderEmployerPosts();
+            renderJobs();
+            toast('Job deleted.');
+        }
+
+        /* ========== Candidate: profile & applications ========== */
+        function saveProfile(){
+            const profile = {
+                name: document.getElementById('profileName').value.trim(),
+                email: document.getElementById('profileEmail').value.trim(),
+                phone: document.getElementById('profilePhone').value.trim(),
+                location: document.getElementById('profileLocation').value.trim(),
+                bio: document.getElementById('profileBio').value.trim()
+            };
+            const f = document.getElementById('profileResume').files[0];
+            if (f) {
+                if (f.size > 3*1024*1024) { toast('Resume too big (>3MB)','error'); return; }
+                profile.resumeName = f.name;
+            }
+            localStorage.setItem('profile', JSON.stringify(profile));
+            toast('Profile saved locally.');
+        }
+
+        function loadProfileForm() {
+            const profile = JSON.parse(localStorage.getItem('profile')||'null');
+            if (!profile) return;
+            document.getElementById('profileName').value = profile.name || '';
+            document.getElementById('profileEmail').value = profile.email || '';
+            document.getElementById('profilePhone').value = profile.phone || '';
+            document.getElementById('profileLocation').value = profile.location || '';
+            document.getElementById('profileBio').value = profile.bio || '';
+        }
+
+        function renderApplications(){
+            const list = document.getElementById('applicationsList');
+            const profile = JSON.parse(localStorage.getItem('profile')||'null');
+            const myEmail = profile ? profile.email : null;
+            const myApps = myEmail ? applications.filter(a=> a.email === myEmail) : [];
+            if (!myEmail) { list.innerHTML = '<div class="alert alert-warning"><i class="fa-solid fa-info-circle me-1"></i> Save your profile (with your email) to see your applications.</div>'; return; }
+            if (myApps.length===0) { list.innerHTML = '<div class="alert alert-info"><i class="fa-solid fa-info-circle me-1"></i> No applications yet.</div>'; return; }
+            list.innerHTML = myApps.map(a=>{
+                const job = jobs.find(j=> j.id === a.jobId) || {title:'(job removed)'};
+                return `<div class="card p-3 mb-3 job-card"><div><strong><i class="fa-solid fa-file-alt me-1"></i> ${job.title}</strong></div><div class="small-muted mt-1"><i class="fa-solid fa-calendar-alt me-1"></i>Applied: ${a.date ? new Date(a.date).toLocaleString() : ''}</div><div class="small-muted mt-1">Resume: ${a.resumeName}</div><div class="small-muted mt-2">Cover Letter: ${a.cover ? a.cover : 'N/A'}</div></div>`;
+            }).join('');
+        }
+
+        /* ========== Simple Auth Simulation (client-side only) ========== */
+        function doRegister(){
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pwd = document.getElementById('regPassword').value;
+            const isEmp = document.getElementById('isEmployer').checked;
+            if (!email || !pwd) { toast('Fill email & password','error'); return; }
+            const user = {id: Date.now(), name, email, isEmployer};
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            currentUser = user;
+            updateAuthUI();
+            toast('Account created (demo).');
+            const rm = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+            if (rm) rm.hide();
+        }
+
+        function doLogin(){
+            const email = document.getElementById('loginEmail').value.trim();
+            const pwd = document.getElementById('loginPassword').value;
+            // demo: any existing user allowed; no password check
+            let user = users.find(u=> u.email === email);
+            if (!user) { toast('User not found — register first','error'); return; }
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            currentUser = user;
+            updateAuthUI();
+            toast('Logged in (demo).');
+            const lm = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+            if (lm) lm.hide();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            updateAuthUI();
+            toast('Logged out.');
+        }
+
+        function updateAuthUI(){
+            if (currentUser) {
+                document.getElementById('authButtons').classList.add('d-none');
+                document.getElementById('userMenu').classList.remove('d-none');
+                document.getElementById('userDropdown').innerText = currentUser.name ? ('Hi, ' + currentUser.name.split(' ')[0]) : 'Hi';
+            } else {
+                document.getElementById('authButtons').classList.remove('d-none');
+                document.getElementById('userMenu').classList.add('d-none');
+            }
+        }
+
+        /* ========== Init ========== */
+        (function init(){
+            updateAuthUI();
+            renderFeatured();
+            filteredJobs = [...jobs];
+            // show home by default
+            showSection('home');
+        })();
+    </script>
+</body>
+</html>
